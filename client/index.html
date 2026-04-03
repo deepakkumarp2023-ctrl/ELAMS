@@ -1,0 +1,2072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ELAMS — Employee Leave & Attendance Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    /* ═══════════════════════════════════════════════════════════
+       DESIGN SYSTEM — Dark Luxury + Neon Accents
+    ═══════════════════════════════════════════════════════════ */
+    :root {
+      --bg-base:      #080c14;
+      --bg-surface:   #0d1526;
+      --bg-card:      rgba(255,255,255,0.04);
+      --bg-card-h:    rgba(255,255,255,0.07);
+      --border:       rgba(255,255,255,0.08);
+      --border-h:     rgba(99,202,183,0.4);
+      --accent:       #63cab7;
+      --accent2:      #7b6ef6;
+      --accent3:      #f4a836;
+      --danger:       #f4516c;
+      --success:      #4cde9a;
+      --text-1:       #f0f4ff;
+      --text-2:       #8899bb;
+      --text-3:       #506080;
+      --glow:         0 0 30px rgba(99,202,183,0.2);
+      --shadow:       0 20px 60px rgba(0,0,0,0.5);
+      --radius:       16px;
+      --radius-sm:    10px;
+      --font-head:    'Syne', sans-serif;
+      --font-body:    'DM Sans', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg-base);
+      color: var(--text-1);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ─── Animated background grid ─── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(99,202,183,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,202,183,0.025) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─── Orb gradient blobs ─── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb-1 { width: 600px; height: 600px; background: rgba(99,202,183,0.06); top: -200px; right: -100px; }
+    .orb-2 { width: 500px; height: 500px; background: rgba(123,110,246,0.07); bottom: -100px; left: -100px; }
+
+    /* ══════════════════════════════════
+       PAGES & ROUTING
+    ══════════════════════════════════ */
+    .page { display: none; position: relative; z-index: 1; min-height: 100vh; }
+    .page.active { display: flex; }
+
+    /* ══════════════════════════════════
+       AUTH PAGE
+    ══════════════════════════════════ */
+    #auth-page {
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .auth-container {
+      width: 100%;
+      max-width: 440px;
+    }
+
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .auth-logo .logo-icon {
+      width: 68px; height: 68px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 0 40px rgba(99,202,183,0.3);
+    }
+
+    .auth-logo h1 {
+      font-family: var(--font-head);
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #fff, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .auth-logo p {
+      color: var(--text-2);
+      font-size: 0.85rem;
+      margin-top: 0.3rem;
+    }
+
+    .auth-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2.5rem;
+      backdrop-filter: blur(20px);
+    }
+
+    .auth-tabs {
+      display: flex;
+      background: var(--bg-card);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      margin-bottom: 2rem;
+      gap: 4px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 0.6rem;
+      border: none;
+      background: transparent;
+      color: var(--text-2);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .auth-tab.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: var(--bg-base);
+      font-weight: 600;
+    }
+
+    /* ─── Form ─── */
+    .form-group {
+      margin-bottom: 1.2rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 0.5rem;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-wrap i {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-3);
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .input-wrap input, .input-wrap select {
+      width: 100%;
+      padding: 0.85rem 1rem 0.85rem 2.8rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-1);
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .input-wrap input:focus, .input-wrap select:focus {
+      border-color: var(--accent);
+      background: rgba(99,202,183,0.05);
+      box-shadow: 0 0 0 3px rgba(99,202,183,0.1);
+    }
+
+    .input-wrap input:focus ~ i,
+    .input-wrap:focus-within i { color: var(--accent); }
+
+    .input-wrap select option { background: var(--bg-surface); }
+
+    textarea {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-1);
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      outline: none;
+      resize: vertical;
+      min-height: 90px;
+      transition: all 0.2s;
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(99,202,183,0.1);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.85rem 1.5rem;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      width: 100%;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: var(--bg-base);
+      box-shadow: 0 4px 20px rgba(99,202,183,0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(99,202,183,0.4);
+    }
+
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-sm {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+    }
+
+    .btn-success {
+      background: rgba(76,222,154,0.15);
+      color: var(--success);
+      border: 1px solid rgba(76,222,154,0.3);
+    }
+
+    .btn-success:hover { background: rgba(76,222,154,0.25); }
+
+    .btn-danger {
+      background: rgba(244,81,108,0.15);
+      color: var(--danger);
+      border: 1px solid rgba(244,81,108,0.3);
+    }
+
+    .btn-danger:hover { background: rgba(244,81,108,0.25); }
+
+    .btn-ghost {
+      background: var(--bg-card);
+      color: var(--text-2);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover { background: var(--bg-card-h); color: var(--text-1); }
+
+    .auth-divider {
+      text-align: center;
+      margin: 1.5rem 0;
+      position: relative;
+    }
+
+    .auth-divider::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 0; right: 0;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .auth-divider span {
+      position: relative;
+      background: var(--bg-surface);
+      padding: 0 1rem;
+      color: var(--text-3);
+      font-size: 0.8rem;
+    }
+
+    .demo-badges {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .demo-badge {
+      flex: 1;
+      min-width: 140px;
+      padding: 0.7rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .demo-badge:hover { border-color: var(--accent); background: var(--bg-card-h); }
+
+    .demo-badge .role { font-size: 0.7rem; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .demo-badge .creds { font-size: 0.75rem; color: var(--text-2); margin-top: 0.2rem; }
+
+    /* ══════════════════════════════════
+       MAIN APP LAYOUT
+    ══════════════════════════════════ */
+    #app-page {
+      flex-direction: row;
+    }
+
+    /* ─── Sidebar ─── */
+    .sidebar {
+      width: 260px;
+      min-height: 100vh;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: fixed;
+      left: 0; top: 0;
+      z-index: 100;
+      transition: transform 0.3s;
+    }
+
+    .sidebar-logo {
+      padding: 1.8rem 1.5rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-logo h2 {
+      font-family: var(--font-head);
+      font-size: 1.3rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.3px;
+    }
+
+    .sidebar-logo small {
+      color: var(--text-3);
+      font-size: 0.72rem;
+      display: block;
+      margin-top: 0.2rem;
+    }
+
+    .user-card {
+      padding: 1.2rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .user-card .avatar {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 0.7rem;
+    }
+
+    .user-card .avatar.admin-av { background: linear-gradient(135deg, var(--accent2), var(--danger)); }
+    .user-card .avatar.emp-av { background: linear-gradient(135deg, var(--accent), var(--accent2)); }
+
+    .user-card .u-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-1);
+    }
+
+    .user-card .u-role {
+      font-size: 0.75rem;
+      color: var(--accent);
+      font-weight: 500;
+      text-transform: capitalize;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 1rem 0.75rem;
+      overflow-y: auto;
+    }
+
+    .nav-section-label {
+      font-size: 0.68rem;
+      color: var(--text-3);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 0.5rem 0.75rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      color: var(--text-2);
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 0.15rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      position: relative;
+    }
+
+    .nav-item i { width: 18px; text-align: center; font-size: 0.95rem; transition: color 0.2s; }
+
+    .nav-item:hover {
+      background: var(--bg-card-h);
+      color: var(--text-1);
+    }
+
+    .nav-item.active {
+      background: linear-gradient(90deg, rgba(99,202,183,0.12), transparent);
+      color: var(--accent);
+      border-left: 2px solid var(--accent);
+    }
+
+    .nav-item.active i { color: var(--accent); }
+
+    .sidebar-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .logout-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.7rem 1rem;
+      background: rgba(244,81,108,0.08);
+      border: 1px solid rgba(244,81,108,0.15);
+      border-radius: var(--radius-sm);
+      color: var(--danger);
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .logout-btn:hover { background: rgba(244,81,108,0.15); }
+
+    /* ─── Main Content ─── */
+    .main-content {
+      flex: 1;
+      margin-left: 260px;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      height: 68px;
+      background: rgba(13,21,38,0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar-left h3 {
+      font-family: var(--font-head);
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .topbar-left p {
+      font-size: 0.78rem;
+      color: var(--text-3);
+    }
+
+    .topbar-right { display: flex; align-items: center; gap: 1rem; }
+
+    .time-badge {
+      padding: 0.4rem 0.8rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: var(--text-2);
+      font-weight: 500;
+    }
+
+    /* ─── Panels ─── */
+    .panel {
+      display: none;
+      padding: 2rem;
+      animation: fadeUp 0.3s ease;
+    }
+
+    .panel.active { display: block; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── Section Header ─── */
+    .section-header {
+      margin-bottom: 1.8rem;
+    }
+
+    .section-header h2 {
+      font-family: var(--font-head);
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .section-header p {
+      color: var(--text-2);
+      font-size: 0.9rem;
+      margin-top: 0.3rem;
+    }
+
+    /* ─── Stat Cards ─── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+
+    .stat-card:hover {
+      border-color: var(--border-h);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      filter: blur(40px);
+      opacity: 0.15;
+    }
+
+    .stat-card.c1::before { background: var(--accent); }
+    .stat-card.c2::before { background: var(--accent2); }
+    .stat-card.c3::before { background: var(--success); }
+    .stat-card.c4::before { background: var(--accent3); }
+    .stat-card.c5::before { background: var(--danger); }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-family: var(--font-head);
+      font-size: 2.4rem;
+      font-weight: 800;
+      margin: 0.4rem 0 0;
+      line-height: 1;
+    }
+
+    .stat-card.c1 .stat-value { color: var(--accent); }
+    .stat-card.c2 .stat-value { color: var(--accent2); }
+    .stat-card.c3 .stat-value { color: var(--success); }
+    .stat-card.c4 .stat-value { color: var(--accent3); }
+    .stat-card.c5 .stat-value { color: var(--danger); }
+
+    .stat-icon {
+      position: absolute;
+      top: 1.2rem; right: 1.2rem;
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+
+    .stat-card.c1 .stat-icon { background: rgba(99,202,183,0.12); color: var(--accent); }
+    .stat-card.c2 .stat-icon { background: rgba(123,110,246,0.12); color: var(--accent2); }
+    .stat-card.c3 .stat-icon { background: rgba(76,222,154,0.12); color: var(--success); }
+    .stat-card.c4 .stat-icon { background: rgba(244,168,54,0.12); color: var(--accent3); }
+    .stat-card.c5 .stat-icon { background: rgba(244,81,108,0.12); color: var(--danger); }
+
+    /* ─── Cards & Tables ─── */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 1.2rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-header h3 {
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead tr { background: rgba(255,255,255,0.02); }
+
+    th {
+      padding: 0.85rem 1.2rem;
+      text-align: left;
+      font-size: 0.72rem;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 1rem 1.2rem;
+      font-size: 0.88rem;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      color: var(--text-2);
+    }
+
+    tbody tr { transition: background 0.2s; }
+    tbody tr:hover { background: var(--bg-card); }
+    tbody tr:last-child td { border-bottom: none; }
+
+    td .strong { color: var(--text-1); font-weight: 500; }
+
+    /* ─── Badges ─── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.7rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
+
+    .badge-pending  { background: rgba(244,168,54,0.12); color: var(--accent3); }
+    .badge-pending::before { background: var(--accent3); }
+    .badge-approved { background: rgba(76,222,154,0.12); color: var(--success); }
+    .badge-approved::before { background: var(--success); }
+    .badge-rejected { background: rgba(244,81,108,0.12); color: var(--danger); }
+    .badge-rejected::before { background: var(--danger); }
+    .badge-present  { background: rgba(76,222,154,0.12); color: var(--success); }
+    .badge-present::before { background: var(--success); }
+    .badge-absent   { background: rgba(244,81,108,0.12); color: var(--danger); }
+    .badge-absent::before { background: var(--danger); }
+
+    /* ─── Check-In Widget ─── */
+    .checkin-widget {
+      background: linear-gradient(135deg, rgba(99,202,183,0.06), rgba(123,110,246,0.06));
+      border: 1px solid rgba(99,202,183,0.2);
+      border-radius: var(--radius);
+      padding: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+
+    .checkin-info h3 {
+      font-family: var(--font-head);
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .checkin-info p { color: var(--text-2); font-size: 0.85rem; margin-top: 0.3rem; }
+
+    .checkin-time {
+      font-family: var(--font-head);
+      font-size: 2.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1;
+    }
+
+    .checkin-actions { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+
+    .btn-checkin {
+      padding: 0.85rem 2rem;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-checkin.in  { background: linear-gradient(135deg, var(--accent), #42a88c); color: #0a1a12; }
+    .btn-checkin.out { background: linear-gradient(135deg, var(--accent3), #d4891a); color: #1a0e00; }
+    .btn-checkin:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .btn-checkin:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* ─── Leave Form Card ─── */
+    .form-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    /* ─── Alert / Toast ─── */
+    .toast-container {
+      position: fixed;
+      bottom: 2rem; right: 2rem;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+
+    .toast {
+      padding: 0.9rem 1.3rem;
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text-1);
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      box-shadow: var(--shadow);
+      animation: slideIn 0.3s ease;
+      max-width: 320px;
+    }
+
+    .toast.success { border-color: rgba(76,222,154,0.3); }
+    .toast.error   { border-color: rgba(244,81,108,0.3); }
+    .toast.success i { color: var(--success); }
+    .toast.error   i { color: var(--danger); }
+
+    @keyframes slideIn {
+      from { transform: translateX(100px); opacity: 0; }
+      to   { transform: translateX(0); opacity: 1; }
+    }
+
+    /* ─── Leave balance bar ─── */
+    .leave-balance {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .balance-bar {
+      height: 6px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .balance-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+
+    .balance-text {
+      font-size: 0.75rem;
+      color: var(--text-3);
+    }
+
+    /* ─── Empty State ─── */
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-3);
+    }
+
+    .empty-state i { font-size: 2.5rem; margin-bottom: 1rem; display: block; }
+    .empty-state p { font-size: 0.9rem; }
+
+    /* ─── Chart Bars ─── */
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 100px;
+      padding: 0.5rem 0;
+    }
+
+    .chart-bar-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      height: 100%;
+      justify-content: flex-end;
+    }
+
+    .chart-bar {
+      width: 100%;
+      background: linear-gradient(to top, var(--accent), var(--accent2));
+      border-radius: 4px 4px 0 0;
+      min-height: 4px;
+      transition: height 0.6s ease;
+      opacity: 0.7;
+    }
+
+    .chart-bar:hover { opacity: 1; }
+
+    .chart-bar-label { font-size: 0.65rem; color: var(--text-3); }
+
+    /* ─── Responsive ─── */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.5rem;
+    }
+
+    .hamburger span {
+      width: 22px; height: 2px;
+      background: var(--text-1);
+      border-radius: 2px;
+      transition: all 0.3s;
+    }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 99;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      .sidebar-overlay.active { display: block; }
+      .hamburger { display: flex; }
+      .main-content { margin-left: 0; }
+      .panel { padding: 1.2rem; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .checkin-widget { flex-direction: column; text-align: center; }
+      .checkin-time { font-size: 2rem; }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ─── Loading spinner ─── */
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Version tag ─── */
+    .version-tag {
+      font-size: 0.7rem;
+      color: var(--text-3);
+      padding: 0.2rem 0.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
+
+    .hidden { display: none !important; }
+
+    /* admin only items */
+    .admin-only { display: none; }
+  </style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<!-- ══════════════════════════════
+     AUTH PAGE
+══════════════════════════════ -->
+<div id="auth-page" class="page active">
+  <div class="auth-container">
+    <div class="auth-logo">
+      <div class="logo-icon">🏢</div>
+      <h1>ELAMS</h1>
+      <p>Employee Leave & Attendance Management System</p>
+    </div>
+
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+        <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+      </div>
+
+      <!-- Login Form -->
+      <div id="login-form">
+        <div class="form-group">
+          <label>Email Address</label>
+          <div class="input-wrap">
+            <i class="fa fa-envelope"></i>
+            <input type="email" id="l-email" placeholder="you@company.com" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="input-wrap">
+            <i class="fa fa-lock"></i>
+            <input type="password" id="l-pass" placeholder="••••••••" />
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="login()" id="login-btn">
+          <i class="fa fa-arrow-right-to-bracket"></i> Sign In
+        </button>
+      </div>
+
+      <!-- Register Form -->
+      <div id="register-form" class="hidden">
+        <div class="form-group">
+          <label>Full Name</label>
+          <div class="input-wrap">
+            <i class="fa fa-user"></i>
+            <input type="text" id="r-name" placeholder="John Smith" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <div class="input-wrap">
+            <i class="fa fa-envelope"></i>
+            <input type="email" id="r-email" placeholder="you@company.com" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="input-wrap">
+            <i class="fa fa-lock"></i>
+            <input type="password" id="r-pass" placeholder="min. 6 characters" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Role</label>
+            <div class="input-wrap">
+              <i class="fa fa-briefcase"></i>
+              <select id="r-role">
+                <option value="employee">Employee</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Department</label>
+            <div class="input-wrap">
+              <i class="fa fa-building"></i>
+              <select id="r-dept">
+                <option value="Engineering">Engineering</option>
+                <option value="Marketing">Marketing</option>
+                <option value="HR">Human Resources</option>
+                <option value="Finance">Finance</option>
+                <option value="Operations">Operations</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="register()" id="register-btn">
+          <i class="fa fa-user-plus"></i> Create Account
+        </button>
+      </div>
+
+      <div class="auth-divider"><span>Quick Demo Access</span></div>
+      <div class="demo-badges">
+        <div class="demo-badge" onclick="fillDemo('admin')">
+          <div class="role">👑 Admin</div>
+          <div class="creds">admin@elams.com</div>
+        </div>
+        <div class="demo-badge" onclick="fillDemo('employee')">
+          <div class="role">👨‍💼 Employee</div>
+          <div class="creds">emp@elams.com</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MAIN APP PAGE
+══════════════════════════════ -->
+<div id="app-page" class="page">
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <h2>⚡ ELAMS</h2>
+      <small>v1.0.0 — SCM Powered</small>
+    </div>
+
+    <div class="user-card">
+      <div class="avatar emp-av" id="sidebar-avatar">JD</div>
+      <div class="u-name" id="sidebar-name">John Doe</div>
+      <div class="u-role" id="sidebar-role">Employee</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+
+      <div class="nav-item active" onclick="showPanel('dashboard')">
+        <i class="fa fa-gauge"></i> Dashboard
+      </div>
+
+      <!-- Employee nav -->
+      <div class="nav-item emp-only" onclick="showPanel('my-leaves')">
+        <i class="fa fa-calendar-days"></i> My Leaves
+      </div>
+      <div class="nav-item emp-only" onclick="showPanel('apply-leave')">
+        <i class="fa fa-plus-circle"></i> Apply Leave
+      </div>
+      <div class="nav-item emp-only" onclick="showPanel('attendance')">
+        <i class="fa fa-clock"></i> Attendance
+      </div>
+
+      <!-- Admin nav -->
+      <div class="nav-item admin-only" onclick="showPanel('all-leaves')">
+        <i class="fa fa-list-check"></i> Leave Requests
+      </div>
+      <div class="nav-item admin-only" onclick="showPanel('employees')">
+        <i class="fa fa-users"></i> Employees
+      </div>
+      <div class="nav-item admin-only" onclick="showPanel('all-attendance')">
+        <i class="fa fa-calendar-check"></i> Attendance Log
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="logout()">
+        <i class="fa fa-sign-out-alt"></i> Logout
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h3 id="topbar-title">Dashboard</h3>
+        <p id="topbar-date"></p>
+      </div>
+      <div class="topbar-right">
+        <div class="time-badge" id="live-time"></div>
+        <span class="version-tag">v1.0.0</span>
+        <button class="hamburger" onclick="toggleSidebar()">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── DASHBOARD PANEL ── -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="section-header">
+        <h2 id="dash-greeting">Good Morning! 👋</h2>
+        <p>Here's what's happening today</p>
+      </div>
+
+      <div class="stats-grid" id="stats-grid">
+        <!-- Filled by JS -->
+      </div>
+
+      <!-- Employee: Check-In Widget -->
+      <div class="checkin-widget emp-only" id="checkin-widget">
+        <div class="checkin-info">
+          <h3>⏱ Today's Attendance</h3>
+          <p id="checkin-status-text">You haven't checked in yet</p>
+        </div>
+        <div class="checkin-time" id="current-time-display">--:--</div>
+        <div class="checkin-actions">
+          <button class="btn-checkin in" id="btn-checkin" onclick="checkIn()">
+            <i class="fa fa-sign-in-alt"></i> Check In
+          </button>
+          <button class="btn-checkin out" id="btn-checkout" onclick="checkOut()" disabled>
+            <i class="fa fa-sign-out-alt"></i> Check Out
+          </button>
+        </div>
+      </div>
+
+      <!-- Recent Leaves preview -->
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="fa fa-history"></i> Recent Activity</h3>
+          <span class="version-tag">Latest 5</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Dates</th>
+                <th>Days</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="dash-leave-tbody">
+              <tr><td colspan="4"><div class="empty-state"><i class="fa fa-leaf"></i><p>No leave records yet</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Admin: quick chart -->
+      <div class="admin-only" style="margin-top:1.5rem">
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fa fa-chart-bar"></i> Leave Distribution</h3>
+          </div>
+          <div style="padding:1.5rem">
+            <div class="chart-bars" id="admin-chart"></div>
+            <div style="display:flex;gap:8px;margin-top:0.5rem;flex-wrap:wrap" id="admin-chart-labels"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MY LEAVES PANEL ── -->
+    <div class="panel" id="panel-my-leaves">
+      <div class="section-header">
+        <h2>My Leave Requests</h2>
+        <p>Track all your leave applications and their status</p>
+      </div>
+
+      <!-- Leave Balance -->
+      <div class="stats-grid" id="leave-balance-stats"></div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="fa fa-calendar-days"></i> Leave History</h3>
+          <button class="btn btn-ghost btn-sm" onclick="showPanel('apply-leave')">
+            <i class="fa fa-plus"></i> Apply
+          </button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Days</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="my-leave-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── APPLY LEAVE PANEL ── -->
+    <div class="panel" id="panel-apply-leave">
+      <div class="section-header">
+        <h2>Apply for Leave</h2>
+        <p>Submit a new leave request for approval</p>
+      </div>
+
+      <div class="form-card">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Leave Type</label>
+            <div class="input-wrap">
+              <i class="fa fa-tag"></i>
+              <select id="leave-type">
+                <option value="sick">Sick Leave</option>
+                <option value="casual">Casual Leave</option>
+                <option value="annual">Annual Leave</option>
+                <option value="emergency">Emergency Leave</option>
+                <option value="maternity">Maternity Leave</option>
+                <option value="paternity">Paternity Leave</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Start Date</label>
+            <div class="input-wrap">
+              <i class="fa fa-calendar"></i>
+              <input type="date" id="leave-start" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>End Date</label>
+            <div class="input-wrap">
+              <i class="fa fa-calendar-check"></i>
+              <input type="date" id="leave-end" />
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Reason <span style="color:var(--text-3)">(min. 10 characters)</span></label>
+          <textarea id="leave-reason" placeholder="Please describe the reason for your leave request..."></textarea>
+        </div>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap">
+          <button class="btn btn-primary" style="width:auto;padding:0.85rem 2rem" onclick="applyLeave()" id="apply-btn">
+            <i class="fa fa-paper-plane"></i> Submit Request
+          </button>
+          <button class="btn btn-ghost" onclick="showPanel('my-leaves')">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ATTENDANCE PANEL ── -->
+    <div class="panel" id="panel-attendance">
+      <div class="section-header">
+        <h2>Attendance History</h2>
+        <p>Your check-in / check-out records</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="fa fa-clock"></i> Attendance Log</h3>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Check In</th>
+                <th>Check Out</th>
+                <th>Hours</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="att-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ADMIN: ALL LEAVES ── -->
+    <div class="panel" id="panel-all-leaves">
+      <div class="section-header">
+        <h2>Leave Requests</h2>
+        <p>Review and manage all employee leave applications</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="fa fa-list-check"></i> All Requests</h3>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="filterLeaves('all')">All</button>
+            <button class="btn btn-ghost btn-sm" onclick="filterLeaves('pending')">Pending</button>
+            <button class="btn btn-ghost btn-sm" onclick="filterLeaves('approved')">Approved</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Type</th>
+                <th>Dates</th>
+                <th>Days</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-leave-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ADMIN: EMPLOYEES ── -->
+    <div class="panel" id="panel-employees">
+      <div class="section-header">
+        <h2>Employee Directory</h2>
+        <p>All registered employees in the system</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="fa fa-users"></i> Employees</h3>
+          <span class="version-tag" id="emp-count-tag">0 employees</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th>Leave Balance</th>
+                <th>Joined</th>
+              </tr>
+            </thead>
+            <tbody id="emp-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ADMIN: ALL ATTENDANCE ── -->
+    <div class="panel" id="panel-all-attendance">
+      <div class="section-header">
+        <h2>Attendance Monitoring</h2>
+        <p>View attendance records across all employees</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="fa fa-calendar-check"></i> All Records</h3>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Date</th>
+                <th>Check In</th>
+                <th>Check Out</th>
+                <th>Hours</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="admin-att-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main-content -->
+</div><!-- /app-page -->
+
+<!-- Toast container -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   ELAMS Frontend — v1.0.0
+   SCM: Git + GitHub | CI/CD: GitHub Actions
+   Author: ELAMS Team
+═══════════════════════════════════════════════ */
+
+const API_BASE = 'http://localhost:5000/api';
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let state = {
+  token: localStorage.getItem('elams_token'),
+  user:  JSON.parse(localStorage.getItem('elams_user') || 'null'),
+  leaves: [],
+  attendance: [],
+  employees: [],
+  todayAtt: null,
+  currentFilter: 'all'
+};
+
+// ─── Mock Data (demo without backend) ────────────────────────────────────────
+const MOCK_USERS = {
+  'admin@elams.com':    { id:'u1', name:'Arun Kumar', email:'admin@elams.com', role:'admin',    department:'HR', employeeId:'ADM001', totalLeaves:20, usedLeaves:2 },
+  'emp@elams.com':      { id:'u2', name:'Priya Singh', email:'emp@elams.com', role:'employee', department:'Engineering', employeeId:'EMP001', totalLeaves:20, usedLeaves:5 }
+};
+const MOCK_PASS = 'demo1234';
+
+let mockLeaves = [
+  { _id:'l1', employee:{_id:'u2',name:'Priya Singh',employeeId:'EMP001'}, leaveType:'sick', startDate:'2024-12-10', endDate:'2024-12-12', totalDays:3, reason:'Severe fever and cold requiring rest', status:'approved', adminComment:'Approved. Get well soon!', createdAt:'2024-12-09T08:00:00Z' },
+  { _id:'l2', employee:{_id:'u2',name:'Priya Singh',employeeId:'EMP001'}, leaveType:'casual', startDate:'2025-01-15', endDate:'2025-01-16', totalDays:2, reason:'Personal work and family function attendance', status:'pending', adminComment:'', createdAt:'2025-01-14T09:00:00Z' },
+  { _id:'l3', employee:{_id:'u3',name:'Rahul Dev',employeeId:'EMP002'},   leaveType:'annual', startDate:'2025-01-20', endDate:'2025-01-25', totalDays:6, reason:'Annual family vacation planned well in advance', status:'pending', adminComment:'', createdAt:'2025-01-18T10:00:00Z' },
+];
+
+let mockAttendance = (() => {
+  const records = [];
+  for (let i = 6; i >= 1; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split('T')[0];
+    const checkIn = new Date(d); checkIn.setHours(9, Math.floor(Math.random()*30), 0);
+    const checkOut = new Date(d); checkOut.setHours(17, Math.floor(Math.random()*60), 0);
+    const hours = ((checkOut - checkIn) / (1000*60*60)).toFixed(2);
+    records.push({ _id:`a${i}`, employee:'u2', date:dateStr, checkIn:checkIn.toISOString(), checkOut:checkOut.toISOString(), totalHours:parseFloat(hours), status:'present' });
+  }
+  return records;
+})();
+
+// ─── API Helper ───────────────────────────────────────────────────────────────
+async function api(path, method='GET', body=null) {
+  try {
+    const opts = {
+      method,
+      headers: { 'Content-Type':'application/json' }
+    };
+    if (state.token) opts.headers['Authorization'] = `Bearer ${state.token}`;
+    if (body) opts.body = JSON.stringify(body);
+
+    const res = await fetch(`${API_BASE}${path}`, opts);
+    return await res.json();
+  } catch (e) {
+    // Fallback to mock if server not available
+    return null;
+  }
+}
+
+// ─── Mock API ─────────────────────────────────────────────────────────────────
+async function mockLogin(email, password) {
+  const user = MOCK_USERS[email];
+  if (!user || password !== MOCK_PASS) return { success:false, message:'Invalid credentials. Use demo1234 as password.' };
+  const token = btoa(JSON.stringify({ id:user.id, role:user.role, exp: Date.now()+7*24*60*60*1000 }));
+  return { success:true, token, user };
+}
+
+async function mockRegister(data) {
+  const id = 'u_'+Date.now();
+  const user = { id, name:data.name, email:data.email, role:data.role||'employee', department:data.department||'General', employeeId:'EMP'+(Object.keys(MOCK_USERS).length+1).toString().padStart(4,'0'), totalLeaves:20, usedLeaves:0 };
+  MOCK_USERS[data.email] = user;
+  const token = btoa(JSON.stringify({ id, role:user.role, exp: Date.now()+7*24*60*60*1000 }));
+  return { success:true, token, user };
+}
+
+// ─── Auth Functions ───────────────────────────────────────────────────────────
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', i === (tab==='login'?0:1)));
+  document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
+  document.getElementById('register-form').classList.toggle('hidden', tab !== 'register');
+}
+
+function fillDemo(role) {
+  const creds = { admin: ['admin@elams.com', MOCK_PASS], employee: ['emp@elams.com', MOCK_PASS] }[role];
+  document.getElementById('l-email').value = creds[0];
+  document.getElementById('l-pass').value = creds[1];
+  switchAuthTab('login');
+  showToast('Demo credentials filled! Click Sign In.', 'success');
+}
+
+async function login() {
+  const email = document.getElementById('l-email').value.trim();
+  const pass  = document.getElementById('l-pass').value;
+  if (!email || !pass) return showToast('Please fill in all fields', 'error');
+
+  const btn = document.getElementById('login-btn');
+  btn.innerHTML = '<span class="spinner"></span> Signing in...';
+  btn.disabled = true;
+
+  // Try real API first, fallback to mock
+  let res = await api('/auth/login', 'POST', { email, password: pass });
+  if (!res || !res.success) res = await mockLogin(email, pass);
+
+  btn.innerHTML = '<i class="fa fa-arrow-right-to-bracket"></i> Sign In';
+  btn.disabled = false;
+
+  if (res.success) {
+    state.token = res.token;
+    state.user  = res.user;
+    localStorage.setItem('elams_token', res.token);
+    localStorage.setItem('elams_user', JSON.stringify(res.user));
+    initApp();
+  } else {
+    showToast(res.message || 'Login failed', 'error');
+  }
+}
+
+async function register() {
+  const name  = document.getElementById('r-name').value.trim();
+  const email = document.getElementById('r-email').value.trim();
+  const pass  = document.getElementById('r-pass').value;
+  const role  = document.getElementById('r-role').value;
+  const dept  = document.getElementById('r-dept').value;
+
+  if (!name || !email || !pass) return showToast('Please fill all required fields', 'error');
+  if (pass.length < 6) return showToast('Password must be at least 6 characters', 'error');
+
+  const btn = document.getElementById('register-btn');
+  btn.innerHTML = '<span class="spinner"></span> Creating account...';
+  btn.disabled = true;
+
+  let res = await api('/auth/register', 'POST', { name, email, password: pass, role, department: dept });
+  if (!res || !res.success) res = await mockRegister({ name, email, password: pass, role, department: dept });
+
+  btn.innerHTML = '<i class="fa fa-user-plus"></i> Create Account';
+  btn.disabled = false;
+
+  if (res.success) {
+    state.token = res.token;
+    state.user  = res.user;
+    localStorage.setItem('elams_token', res.token);
+    localStorage.setItem('elams_user', JSON.stringify(res.user));
+    showToast(`Welcome, ${name}! 🎉`, 'success');
+    initApp();
+  } else {
+    showToast(res.message || 'Registration failed', 'error');
+  }
+}
+
+function logout() {
+  localStorage.removeItem('elams_token');
+  localStorage.removeItem('elams_user');
+  state.token = null; state.user = null;
+  showPage('auth-page');
+  showToast('Logged out successfully', 'success');
+}
+
+// ─── App Init ─────────────────────────────────────────────────────────────────
+function initApp() {
+  showPage('app-page');
+  const u = state.user;
+  const isAdmin = u.role === 'admin';
+
+  // Sidebar user card
+  document.getElementById('sidebar-name').textContent = u.name;
+  document.getElementById('sidebar-role').textContent = u.role;
+  const av = document.getElementById('sidebar-avatar');
+  av.textContent = u.name.split(' ').map(p=>p[0]).join('').toUpperCase().slice(0,2);
+  av.className = `avatar ${isAdmin ? 'admin-av' : 'emp-av'}`;
+
+  // Show/hide nav items
+  document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? 'flex' : 'none');
+  document.querySelectorAll('.emp-only').forEach(el => el.style.display = !isAdmin ? 'flex' : 'none');
+
+  updateGreeting();
+  startClock();
+  loadDashboard();
+}
+
+async function loadDashboard() {
+  const isAdmin = state.user.role === 'admin';
+
+  // Load leaves
+  let res = await api('/leaves');
+  if (!res || !res.success) {
+    // Mock mode
+    state.leaves = isAdmin ? mockLeaves : mockLeaves.filter(l => l.employee._id === state.user.id);
+  } else {
+    state.leaves = res.leaves;
+  }
+
+  // Load attendance
+  let attRes = await api('/attendance');
+  if (!attRes || !attRes.success) {
+    state.attendance = isAdmin ? mockAttendance : mockAttendance.filter(a => a.employee === state.user.id);
+  } else {
+    state.attendance = attRes.attendance;
+  }
+
+  // Today's attendance
+  let todayRes = await api('/attendance/today');
+  if (!todayRes || !todayRes.success) {
+    const today = new Date().toISOString().split('T')[0];
+    state.todayAtt = mockAttendance.find(a => a.employee === state.user.id && a.date === today) || null;
+  } else {
+    state.todayAtt = todayRes.attendance;
+  }
+
+  renderDashboard();
+  renderMyLeaves();
+  renderAttendance();
+  if (isAdmin) {
+    renderAdminLeaves();
+    loadEmployees();
+  }
+}
+
+function renderDashboard() {
+  const u = state.user;
+  const isAdmin = u.role === 'admin';
+  const leaves = state.leaves;
+  const pending = leaves.filter(l => l.status === 'pending').length;
+  const approved = leaves.filter(l => l.status === 'approved').length;
+
+  const statsGrid = document.getElementById('stats-grid');
+
+  if (isAdmin) {
+    const total = leaves.length;
+    const todayPresent = state.attendance.filter(a => a.date === new Date().toISOString().split('T')[0]).length;
+    statsGrid.innerHTML = `
+      <div class="stat-card c1"><span class="stat-label">Total Requests</span><div class="stat-value">${total}</div><div class="stat-icon"><i class="fa fa-file-alt"></i></div></div>
+      <div class="stat-card c4"><span class="stat-label">Pending</span><div class="stat-value">${pending}</div><div class="stat-icon"><i class="fa fa-clock"></i></div></div>
+      <div class="stat-card c3"><span class="stat-label">Approved</span><div class="stat-value">${approved}</div><div class="stat-icon"><i class="fa fa-check"></i></div></div>
+      <div class="stat-card c2"><span class="stat-label">Present Today</span><div class="stat-value">${todayPresent}</div><div class="stat-icon"><i class="fa fa-users"></i></div></div>
+    `;
+    renderAdminChart();
+  } else {
+    const total = u.totalLeaves || 20;
+    const used = u.usedLeaves || 0;
+    const remaining = total - used;
+    statsGrid.innerHTML = `
+      <div class="stat-card c1"><span class="stat-label">Total Leaves</span><div class="stat-value">${total}</div><div class="stat-icon"><i class="fa fa-calendar"></i></div></div>
+      <div class="stat-card c5"><span class="stat-label">Used</span><div class="stat-value">${used}</div><div class="stat-icon"><i class="fa fa-minus-circle"></i></div></div>
+      <div class="stat-card c3"><span class="stat-label">Remaining</span><div class="stat-value">${remaining}</div><div class="stat-icon"><i class="fa fa-leaf"></i></div></div>
+      <div class="stat-card c4"><span class="stat-label">Pending</span><div class="stat-value">${pending}</div><div class="stat-icon"><i class="fa fa-hourglass"></i></div></div>
+    `;
+    updateCheckinWidget();
+  }
+
+  // Recent 5 leaves in dashboard
+  const tbody = document.getElementById('dash-leave-tbody');
+  const recent = leaves.slice(0, 5);
+  if (!recent.length) {
+    tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><i class="fa fa-leaf"></i><p>No leave records yet</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = recent.map(l => `
+    <tr>
+      <td><span class="strong">${capitalize(l.leaveType)}</span></td>
+      <td>${fmt(l.startDate)} → ${fmt(l.endDate)}</td>
+      <td>${l.totalDays} day${l.totalDays>1?'s':''}</td>
+      <td><span class="badge badge-${l.status}">${l.status}</span></td>
+    </tr>
+  `).join('');
+}
+
+function renderAdminChart() {
+  const types = ['sick','casual','annual','emergency','maternity','paternity'];
+  const colors = ['var(--accent)','var(--accent2)','var(--success)','var(--danger)','var(--accent3)','#ff6b9d'];
+  const chart = document.getElementById('admin-chart');
+  const labels = document.getElementById('admin-chart-labels');
+  if (!chart) return;
+  const counts = types.map(t => state.leaves.filter(l => l.leaveType === t).length);
+  const max = Math.max(...counts, 1);
+  chart.innerHTML = types.map((t,i) => `
+    <div class="chart-bar-wrap">
+      <div class="chart-bar" style="height:${(counts[i]/max*80)+4}px;background:${colors[i]}" title="${capitalize(t)}: ${counts[i]}"></div>
+      <div class="chart-bar-label">${t.slice(0,3).toUpperCase()}</div>
+    </div>
+  `).join('');
+  labels.innerHTML = types.map((t,i) => `<span style="font-size:0.72rem;color:${colors[i]};background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px">${capitalize(t)}: ${counts[i]}</span>`).join('');
+}
+
+function updateCheckinWidget() {
+  const att = state.todayAtt;
+  const btnIn = document.getElementById('btn-checkin');
+  const btnOut = document.getElementById('btn-checkout');
+  const statusTxt = document.getElementById('checkin-status-text');
+
+  if (!att || !att.checkIn) {
+    btnIn.disabled = false;
+    btnOut.disabled = true;
+    statusTxt.textContent = "You haven't checked in yet";
+  } else if (att.checkIn && !att.checkOut) {
+    btnIn.disabled = true;
+    btnOut.disabled = false;
+    statusTxt.textContent = `✅ Checked in at ${fmtTime(att.checkIn)}`;
+  } else {
+    btnIn.disabled = true;
+    btnOut.disabled = true;
+    statusTxt.textContent = `✅ ${fmtTime(att.checkIn)} — ${fmtTime(att.checkOut)} (${att.totalHours}h)`;
+  }
+}
+
+// ─── Attendance ───────────────────────────────────────────────────────────────
+async function checkIn() {
+  const btn = document.getElementById('btn-checkin');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+
+  let res = await api('/attendance/checkin', 'POST');
+  if (!res || !res.success) {
+    // Mock
+    const today = new Date().toISOString().split('T')[0];
+    const rec = { _id:'a'+Date.now(), employee:state.user.id, date:today, checkIn:new Date().toISOString(), checkOut:null, totalHours:0, status:'present' };
+    mockAttendance.push(rec);
+    state.todayAtt = rec;
+    res = { success:true, message:'Checked in successfully' };
+  } else {
+    state.todayAtt = res.attendance;
+  }
+
+  btn.innerHTML = '<i class="fa fa-sign-in-alt"></i> Check In';
+  if (res.success) {
+    showToast('Checked in successfully! ✅', 'success');
+    updateCheckinWidget();
+    state.attendance = [...state.attendance, state.todayAtt];
+    renderAttendance();
+  } else {
+    btn.disabled = false;
+    showToast(res.message, 'error');
+  }
+}
+
+async function checkOut() {
+  const btn = document.getElementById('btn-checkout');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+
+  let res = await api('/attendance/checkout', 'PUT');
+  if (!res || !res.success) {
+    // Mock
+    const idx = mockAttendance.findIndex(a => a.employee === state.user.id && a.date === new Date().toISOString().split('T')[0]);
+    if (idx >= 0) {
+      const checkOut = new Date().toISOString();
+      const diff = ((new Date(checkOut) - new Date(mockAttendance[idx].checkIn)) / (1000*60*60)).toFixed(2);
+      mockAttendance[idx] = { ...mockAttendance[idx], checkOut, totalHours: parseFloat(diff) };
+      state.todayAtt = mockAttendance[idx];
+    }
+    res = { success:true, message:'Checked out successfully' };
+  } else {
+    state.todayAtt = res.attendance;
+  }
+
+  btn.innerHTML = '<i class="fa fa-sign-out-alt"></i> Check Out';
+  if (res.success) {
+    showToast('Checked out successfully! 👋', 'success');
+    updateCheckinWidget();
+    renderAttendance();
+  } else {
+    showToast(res.message || 'Error', 'error');
+  }
+}
+
+function renderAttendance() {
+  const tbody = document.getElementById('att-tbody');
+  const adminTbody = document.getElementById('admin-att-tbody');
+  const records = state.attendance;
+
+  const rows = records.map(a => `
+    <tr>
+      ${state.user.role==='admin' ? `<td><span class="strong">${a.employee?.name||a.employee||'—'}</span></td>` : ''}
+      <td class="strong">${a.date}</td>
+      <td>${a.checkIn ? fmtTime(a.checkIn) : '—'}</td>
+      <td>${a.checkOut ? fmtTime(a.checkOut) : '<span style="color:var(--accent3)">Active</span>'}</td>
+      <td>${a.totalHours ? a.totalHours+'h' : '—'}</td>
+      <td><span class="badge badge-${a.status||'present'}">${a.status||'present'}</span></td>
+    </tr>
+  `).join('') || '<tr><td colspan="6"><div class="empty-state"><i class="fa fa-clock"></i><p>No attendance records</p></div></td></tr>';
+
+  if (tbody) tbody.innerHTML = rows;
+  if (adminTbody) adminTbody.innerHTML = rows;
+}
+
+// ─── Leave Functions ──────────────────────────────────────────────────────────
+async function applyLeave() {
+  const leaveType = document.getElementById('leave-type').value;
+  const startDate = document.getElementById('leave-start').value;
+  const endDate   = document.getElementById('leave-end').value;
+  const reason    = document.getElementById('leave-reason').value.trim();
+
+  if (!startDate || !endDate || !reason) return showToast('Please fill all fields', 'error');
+  if (reason.length < 10) return showToast('Reason must be at least 10 characters', 'error');
+  if (new Date(endDate) < new Date(startDate)) return showToast('End date cannot be before start date', 'error');
+
+  const btn = document.getElementById('apply-btn');
+  btn.innerHTML = '<span class="spinner"></span> Submitting...';
+  btn.disabled = true;
+
+  let res = await api('/leaves', 'POST', { leaveType, startDate, endDate, reason });
+  if (!res || !res.success) {
+    // Mock
+    const start = new Date(startDate), end = new Date(endDate);
+    const totalDays = Math.ceil((end-start)/(1000*60*60*24))+1;
+    const newLeave = { _id:'l'+Date.now(), employee:{_id:state.user.id,name:state.user.name,employeeId:state.user.employeeId||'EMP000'}, leaveType, startDate, endDate, totalDays, reason, status:'pending', adminComment:'', createdAt:new Date().toISOString() };
+    mockLeaves.unshift(newLeave);
+    state.leaves.unshift(newLeave);
+    res = { success:true };
+  } else {
+    state.leaves.unshift(res.leave);
+  }
+
+  btn.innerHTML = '<i class="fa fa-paper-plane"></i> Submit Request';
+  btn.disabled = false;
+
+  if (res.success) {
+    showToast('Leave application submitted! 📋', 'success');
+    document.getElementById('leave-reason').value = '';
+    document.getElementById('leave-start').value = '';
+    document.getElementById('leave-end').value = '';
+    renderMyLeaves();
+    renderDashboard();
+    showPanel('my-leaves');
+  } else {
+    showToast(res.message || 'Failed to submit', 'error');
+  }
+}
+
+function renderMyLeaves() {
+  const tbody = document.getElementById('my-leave-tbody');
+  const empLeaves = state.leaves.filter(l => state.user.role === 'admin' || l.employee?._id === state.user.id || l.employee === state.user.id);
+  if (!empLeaves.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fa fa-calendar-xmark"></i><p>No leave requests found</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = empLeaves.map(l => `
+    <tr>
+      <td><span class="strong">${capitalize(l.leaveType)}</span></td>
+      <td>${fmt(l.startDate)}</td>
+      <td>${fmt(l.endDate)}</td>
+      <td>${l.totalDays}d</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${l.reason}">${l.reason}</td>
+      <td><span class="badge badge-${l.status}">${l.status}</span></td>
+      <td>${l.status==='pending' ? `<button class="btn btn-danger btn-sm" onclick="cancelLeave('${l._id}')"><i class="fa fa-times"></i></button>` : l.adminComment ? `<span style="font-size:0.78rem;color:var(--text-3)">${l.adminComment}</span>` : '—'}</td>
+    </tr>
+  `).join('');
+}
+
+async function cancelLeave(id) {
+  let res = await api(`/leaves/${id}`, 'DELETE');
+  if (!res || !res.success) {
+    const idx = mockLeaves.findIndex(l => l._id === id);
+    if (idx >= 0) mockLeaves.splice(idx, 1);
+    state.leaves = state.leaves.filter(l => l._id !== id);
+    res = { success: true };
+  } else {
+    state.leaves = state.leaves.filter(l => l._id !== id);
+  }
+  if (res.success) { showToast('Leave cancelled', 'success'); renderMyLeaves(); renderDashboard(); }
+}
+
+function renderAdminLeaves(filter='all') {
+  const tbody = document.getElementById('admin-leave-tbody');
+  let leaves = state.leaves;
+  if (filter !== 'all') leaves = leaves.filter(l => l.status === filter);
+  state.currentFilter = filter;
+  if (!leaves.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fa fa-inbox"></i><p>No ${filter==='all'?'':filter} leave requests</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = leaves.map(l => `
+    <tr>
+      <td>
+        <div class="strong">${l.employee?.name || '—'}</div>
+        <div style="font-size:0.75rem;color:var(--text-3)">${l.employee?.employeeId||''}</div>
+      </td>
+      <td><span class="strong">${capitalize(l.leaveType)}</span></td>
+      <td>${fmt(l.startDate)} → ${fmt(l.endDate)}</td>
+      <td>${l.totalDays}d</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.reason}</td>
+      <td><span class="badge badge-${l.status}">${l.status}</span></td>
+      <td>
+        ${l.status==='pending' ? `
+          <div style="display:flex;gap:0.4rem">
+            <button class="btn btn-success btn-sm" onclick="reviewLeave('${l._id}','approved')">✓</button>
+            <button class="btn btn-danger btn-sm" onclick="reviewLeave('${l._id}','rejected')">✗</button>
+          </div>
+        ` : `<span style="font-size:0.78rem;color:var(--text-3)">${l.adminComment||'—'}</span>`}
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function reviewLeave(id, status) {
+  const comment = status==='approved' ? 'Approved.' : 'Rejected. Please discuss with HR.';
+
+  let res = await api(`/leaves/${id}`, 'PUT', { status, adminComment: comment });
+  if (!res || !res.success) {
+    const idx = mockLeaves.findIndex(l => l._id === id);
+    if (idx >= 0) { mockLeaves[idx] = {...mockLeaves[idx], status, adminComment: comment}; }
+    const stateIdx = state.leaves.findIndex(l => l._id === id);
+    if (stateIdx >= 0) { state.leaves[stateIdx] = {...state.leaves[stateIdx], status, adminComment: comment}; }
+    res = { success: true };
+  } else {
+    const stateIdx = state.leaves.findIndex(l => l._id === id);
+    if (stateIdx >= 0) state.leaves[stateIdx] = res.leave;
+  }
+
+  if (res.success) {
+    showToast(`Leave ${status} successfully ✅`, 'success');
+    renderAdminLeaves(state.currentFilter);
+    renderDashboard();
+  }
+}
+
+function filterLeaves(filter) {
+  renderAdminLeaves(filter);
+}
+
+async function loadEmployees() {
+  let res = await api('/employees');
+  if (!res || !res.success) {
+    const empUsers = Object.values(MOCK_USERS).filter(u => u.role==='employee');
+    state.employees = empUsers;
+  } else {
+    state.employees = res.employees;
+  }
+  renderEmployees();
+}
+
+function renderEmployees() {
+  const tbody = document.getElementById('emp-tbody');
+  const tag = document.getElementById('emp-count-tag');
+  if (!state.employees.length) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fa fa-users"></i><p>No employees found</p></div></td></tr>';
+    if (tag) tag.textContent = '0 employees';
+    return;
+  }
+  if (tag) tag.textContent = `${state.employees.length} employees`;
+  tbody.innerHTML = state.employees.map(e => `
+    <tr>
+      <td class="strong">${e.employeeId || '—'}</td>
+      <td>
+        <div class="strong">${e.name}</div>
+        <div style="font-size:0.75rem;color:var(--text-3)">${e.department}</div>
+      </td>
+      <td>${e.email}</td>
+      <td>${e.department}</td>
+      <td>
+        <div>${(e.totalLeaves||20) - (e.usedLeaves||0)} / ${e.totalLeaves||20} remaining</div>
+        <div class="balance-bar" style="margin-top:4px">
+          <div class="balance-fill" style="width:${Math.max(0,100-((e.usedLeaves||0)/(e.totalLeaves||20)*100))}%"></div>
+        </div>
+      </td>
+      <td>${e.joinDate ? fmt(e.joinDate) : e.createdAt ? fmt(e.createdAt) : '—'}</td>
+    </tr>
+  `).join('');
+}
+
+// ─── UI Helpers ───────────────────────────────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`panel-${name}`).classList.add('active');
+  document.getElementById('topbar-title').textContent = {
+    'dashboard':'Dashboard','my-leaves':'My Leaves','apply-leave':'Apply Leave',
+    'attendance':'Attendance','all-leaves':'Leave Requests','employees':'Employees','all-attendance':'Attendance Log'
+  }[name] || name;
+  closeSidebar();
+}
+
+function showToast(msg, type='success') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<i class="fa fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+function startClock() {
+  const update = () => {
+    const now = new Date();
+    const t = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    document.getElementById('live-time').textContent = t;
+    document.getElementById('current-time-display').textContent = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+  };
+  update();
+  setInterval(update, 1000);
+}
+
+function updateGreeting() {
+  const h = new Date().getHours();
+  const g = h < 12 ? 'Good Morning' : h < 17 ? 'Good Afternoon' : 'Good Evening';
+  document.getElementById('dash-greeting').textContent = `${g}, ${state.user?.name?.split(' ')[0]}! 👋`;
+  const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+  document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('en-US', opts);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('active');
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('active');
+}
+
+function fmt(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function fmtTime(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+}
+
+function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+if (state.token && state.user) {
+  initApp();
+}
+</script>
+</body>
+</html>
