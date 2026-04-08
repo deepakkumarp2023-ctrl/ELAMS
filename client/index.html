@@ -1453,8 +1453,16 @@ let state = {
 
 // ─── Mock Data (demo without backend) ────────────────────────────────────────
 const MOCK_USERS = {
-  'admin@elams.com':    { id:'u1', name:'Arun Kumar', email:'admin@elams.com', role:'admin',    department:'HR', employeeId:'ADM001', totalLeaves:20, usedLeaves:2 },
-  'emp@elams.com':      { id:'u2', name:'Priya Singh', email:'emp@elams.com', role:'employee', department:'Engineering', employeeId:'EMP001', totalLeaves:20, usedLeaves:5 }
+  'admin@elams.com': { 
+    id:'u1', name:'Arun Kumar', email:'admin@elams.com', 
+    role:'admin', department:'HR', employeeId:'ADM001', 
+    totalLeaves:20, usedLeaves:2, _pass:'demo1234' 
+  },
+  'emp@elams.com': { 
+    id:'u2', name:'Priya Singh', email:'emp@elams.com', 
+    role:'employee', department:'Engineering', employeeId:'EMP001', 
+    totalLeaves:20, usedLeaves:5, _pass:'demo1234' 
+  }
 };
 const MOCK_PASS = 'demo1234';
 
@@ -1498,18 +1506,60 @@ async function api(path, method='GET', body=null) {
 
 // ─── Mock API ─────────────────────────────────────────────────────────────────
 async function mockLogin(email, password) {
+  // Check both hardcoded demo users AND newly registered users
   const user = MOCK_USERS[email];
-  if (!user || password !== MOCK_PASS) return { success:false, message:'Invalid credentials. Use demo1234 as password.' };
-  const token = btoa(JSON.stringify({ id:user.id, role:user.role, exp: Date.now()+7*24*60*60*1000 }));
-  return { success:true, token, user };
+  if (!user) {
+    return { 
+      success: false, 
+      message: 'No account found with this email. Please register first.' 
+    };
+  }
+  // Compare password — each user has their own _pass stored
+  if (password !== user._pass) {
+    return { 
+      success: false, 
+      message: 'Incorrect password.' 
+    };
+  }
+  const { _pass, ...safeUser } = user;
+  const token = btoa(JSON.stringify({ 
+    id: user.id, 
+    role: user.role,
+    email: user.email,
+    name: user.name,
+    exp: Date.now() + 7*24*60*60*1000 
+  }));
+  return { success: true, token, user: safeUser };
 }
 
 async function mockRegister(data) {
-  const id = 'u_'+Date.now();
-  const user = { id, name:data.name, email:data.email, role:data.role||'employee', department:data.department||'General', employeeId:'EMP'+(Object.keys(MOCK_USERS).length+1).toString().padStart(4,'0'), totalLeaves:20, usedLeaves:0 };
-  MOCK_USERS[data.email] = user;
-  const token = btoa(JSON.stringify({ id, role:user.role, exp: Date.now()+7*24*60*60*1000 }));
-  return { success:true, token, user };
+  // Check if email already exists
+  if (MOCK_USERS[data.email]) {
+    return { success: false, message: 'Email already registered. Please login.' };
+  }
+  const id = 'u_' + Date.now();
+  const count = Object.keys(MOCK_USERS).length + 1;
+  const newUser = { 
+    id, 
+    name: data.name, 
+    email: data.email, 
+    role: data.role || 'employee', 
+    department: data.department || 'General',
+    employeeId: `EMP${String(count).padStart(4,'0')}`,
+    totalLeaves: 20, 
+    usedLeaves: 0,
+    _pass: data.password   // store password for login check
+  };
+  // Save into the SAME store that mockLogin() checks
+  MOCK_USERS[data.email] = newUser;
+
+  const { _pass, ...safeUser } = newUser;
+  const token = btoa(JSON.stringify({ 
+    id, role: newUser.role, email: newUser.email,
+    name: newUser.name,
+    exp: Date.now() + 7*24*60*60*1000 
+  }));
+  return { success: true, token, user: safeUser };
 }
 
 // ─── Auth Functions ───────────────────────────────────────────────────────────
@@ -1536,7 +1586,6 @@ async function login() {
   btn.innerHTML = '<span class="spinner"></span> Signing in...';
   btn.disabled = true;
 
-  // Try real API first, fallback to mock
   let res = await api('/auth/login', 'POST', { email, password: pass });
   if (!res || !res.success) res = await mockLogin(email, pass);
 
@@ -1548,7 +1597,8 @@ async function login() {
     state.user  = res.user;
     localStorage.setItem('elams_token', res.token);
     localStorage.setItem('elams_user', JSON.stringify(res.user));
-    initApp();
+    // Small delay ensures DOM is ready before switching page
+    setTimeout(() => initApp(), 100);
   } else {
     showToast(res.message || 'Login failed', 'error');
   }
@@ -2065,7 +2115,19 @@ function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 if (state.token && state.user) {
-  initApp();
+  // Verify token not expired before auto-login
+  try {
+    const decoded = JSON.parse(atob(state.token));
+    if (decoded.exp && decoded.exp > Date.now()) {
+      initApp();
+    } else {
+      // Token expired — clear and show login
+      localStorage.removeItem('elams_token');
+      localStorage.removeItem('elams_user');
+    }
+  } catch(e) {
+    initApp(); // real JWT from backend — just proceed
+  }
 }
 </script>
 </body>
