@@ -1453,18 +1453,8 @@ let state = {
 
 // ─── Mock Data (demo without backend) ────────────────────────────────────────
 const MOCK_USERS = {
-  'admin@elams.com': { 
-    id:'u1', name:'Arun Kumar', email:'admin@elams.com', 
-    role:'admin', department:'HR', employeeId:'ADM001', 
-    totalLeaves:20, usedLeaves:2,
-    _pass: 'demo1234'   // ← ADD THIS
-  },
-  'emp@elams.com': { 
-    id:'u2', name:'Priya Singh', email:'emp@elams.com', 
-    role:'employee', department:'Engineering', employeeId:'EMP001', 
-    totalLeaves:20, usedLeaves:5,
-    _pass: 'demo1234'   // ← ADD THIS
-  }
+  'admin@elams.com':    { id:'u1', name:'Arun Kumar', email:'admin@elams.com', role:'admin',    department:'HR', employeeId:'ADM001', totalLeaves:20, usedLeaves:2 },
+  'emp@elams.com':      { id:'u2', name:'Priya Singh', email:'emp@elams.com', role:'employee', department:'Engineering', employeeId:'EMP001', totalLeaves:20, usedLeaves:5 }
 };
 const MOCK_PASS = 'demo1234';
 
@@ -1509,47 +1499,17 @@ async function api(path, method='GET', body=null) {
 // ─── Mock API ─────────────────────────────────────────────────────────────────
 async function mockLogin(email, password) {
   const user = MOCK_USERS[email];
-  if (!user) return { success: false, message: 'No account found. Please register first.' };
-  if (password !== user._pass) return { success: false, message: 'Incorrect password.' };
-  const { _pass, ...safeUser } = user;
-  const token = btoa(JSON.stringify({ 
-    id: user.id, role: user.role, 
-    exp: Date.now() + 7*24*60*60*1000 
-  }));
-  return { success: true, token, user: safeUser };
+  if (!user || password !== MOCK_PASS) return { success:false, message:'Invalid credentials. Use demo1234 as password.' };
+  const token = btoa(JSON.stringify({ id:user.id, role:user.role, exp: Date.now()+7*24*60*60*1000 }));
+  return { success:true, token, user };
 }
 
 async function mockRegister(data) {
-  // Check duplicate
-  if (MOCK_USERS[data.email]) {
-    return { success: false, message: 'Email already registered. Please login.' };
-  }
-  
-  const id = 'u_' + Date.now();
-  const empCount = Object.keys(MOCK_USERS).length + 1;
-  
-  const user = { 
-    id, 
-    name: data.name, 
-    email: data.email, 
-    role: data.role || 'employee', 
-    department: data.department || 'General',
-    employeeId: `EMP${String(empCount).padStart(4,'0')}`,
-    totalLeaves: 20, 
-    usedLeaves: 0,
-    _pass: data.password   // ← store plain password for mock mode
-  };
-  
-  // Save into the SAME store that login checks
+  const id = 'u_'+Date.now();
+  const user = { id, name:data.name, email:data.email, role:data.role||'employee', department:data.department||'General', employeeId:'EMP'+(Object.keys(MOCK_USERS).length+1).toString().padStart(4,'0'), totalLeaves:20, usedLeaves:0 };
   MOCK_USERS[data.email] = user;
-  
-  const { _pass, ...safeUser } = user;
-  const token = btoa(JSON.stringify({ 
-    id, role: user.role, 
-    exp: Date.now() + 7*24*60*60*1000 
-  }));
-  
-  return { success: true, token, user: safeUser };
+  const token = btoa(JSON.stringify({ id, role:user.role, exp: Date.now()+7*24*60*60*1000 }));
+  return { success:true, token, user };
 }
 
 // ─── Auth Functions ───────────────────────────────────────────────────────────
@@ -1999,10 +1959,7 @@ function filterLeaves(filter) {
 async function loadEmployees() {
   let res = await api('/employees');
   if (!res || !res.success) {
-    // Read ALL registered users from the shared store
-    const empUsers = Object.values(MOCK_USERS)
-      .filter(u => u.role === 'employee')
-      .map(({ _pass, ...safe }) => safe); // remove password before displaying
+    const empUsers = Object.values(MOCK_USERS).filter(u => u.role==='employee');
     state.employees = empUsers;
   } else {
     state.employees = res.employees;
